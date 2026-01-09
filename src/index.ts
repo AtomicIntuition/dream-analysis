@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { env } from './config/env';
+import { startKeepWarm } from './utils/keepWarm';
 
 // Routes
 import authRoutes from './routes/auth';
@@ -11,6 +12,9 @@ import analysisRoutes from './routes/analysis';
 import billingRoutes from './routes/billing';
 
 const app = express();
+
+// Trust proxy (required for rate limiting behind reverse proxy like Render)
+app.set('trust proxy', 1);
 
 // Security middleware
 app.use(helmet());
@@ -83,9 +87,12 @@ app.use((err: Error, req: express.Request, res: express.Response, _next: express
 const PORT = parseInt(env.PORT, 10);
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Environment: ${env.NODE_ENV}`);
-  console.log(`🌐 Frontend URL: ${env.FRONTEND_URL}`);
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Environment: ${env.NODE_ENV}`);
+  console.log(`Frontend URL: ${env.FRONTEND_URL}`);
+
+  // Start keep-warm for Render free tier
+  startKeepWarm(env.SERVICE_URL);
 });
 
 export default app;

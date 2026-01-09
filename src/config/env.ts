@@ -11,6 +11,7 @@ const envSchema = z.object({
   PORT: z.string().default('3001'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   FRONTEND_URL: z.string().default('http://localhost:5173'),
+  SERVICE_URL: z.string().optional(), // For keep-warm self-ping
 
   // Supabase
   SUPABASE_URL: isDev
@@ -58,6 +59,7 @@ export const env = parsed.success ? parsed.data : {
   PORT: '3001',
   NODE_ENV: 'development' as const,
   FRONTEND_URL: 'http://localhost:5173',
+  SERVICE_URL: undefined,
   SUPABASE_URL: 'https://placeholder.supabase.co',
   SUPABASE_ANON_KEY: 'placeholder-anon-key',
   SUPABASE_SERVICE_ROLE_KEY: 'placeholder-service-key',
