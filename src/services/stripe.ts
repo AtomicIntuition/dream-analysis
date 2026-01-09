@@ -92,6 +92,42 @@ export async function createPortalSession(userId: string, returnUrl: string) {
   return session;
 }
 
+// Cancel all subscriptions for a customer
+export async function cancelCustomerSubscriptions(userId: string) {
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('stripe_customer_id, stripe_subscription_id')
+    .eq('user_id', userId)
+    .single();
+
+  if (!profile?.stripe_customer_id) {
+    return; // No customer, nothing to cancel
+  }
+
+  // Cancel specific subscription if we have it
+  if (profile.stripe_subscription_id) {
+    try {
+      await stripe.subscriptions.cancel(profile.stripe_subscription_id);
+    } catch (error) {
+      console.error('Error canceling subscription:', error);
+    }
+  }
+
+  // Also cancel any other active subscriptions for this customer
+  try {
+    const subscriptions = await stripe.subscriptions.list({
+      customer: profile.stripe_customer_id,
+      status: 'active',
+    });
+
+    for (const subscription of subscriptions.data) {
+      await stripe.subscriptions.cancel(subscription.id);
+    }
+  } catch (error) {
+    console.error('Error canceling customer subscriptions:', error);
+  }
+}
+
 // Handle webhook events
 export async function handleWebhookEvent(event: Stripe.Event) {
   switch (event.type) {

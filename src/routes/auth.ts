@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { authMiddleware } from '../middleware/auth';
 import { getOrCreateProfile, supabaseAdmin } from '../services/supabase';
+import { cancelCustomerSubscriptions } from '../services/stripe';
 import type { AuthenticatedRequest } from '../types';
 
 const router = Router();
@@ -35,6 +36,9 @@ router.get('/me', authMiddleware, async (req: Request, res: Response) => {
 router.delete('/me', authMiddleware, async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
   try {
+    // Cancel any active Stripe subscriptions first
+    await cancelCustomerSubscriptions(authReq.user.id);
+
     // Delete all user's dreams
     await supabaseAdmin
       .from('dreams')
@@ -52,7 +56,7 @@ router.delete('/me', authMiddleware, async (req: Request, res: Response) => {
 
     res.json({
       success: true,
-      data: { message: 'Account data deleted' },
+      data: { message: 'Account and subscription cancelled' },
     });
   } catch (error) {
     console.error('Error deleting account:', error);
