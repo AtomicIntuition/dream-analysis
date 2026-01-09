@@ -43,41 +43,45 @@ CREATE INDEX IF NOT EXISTS idx_dreams_user_date ON dreams(user_id, date DESC);
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dreams ENABLE ROW LEVEL SECURITY;
 
--- Profiles policies
+-- Profiles policies (optimized with select wrapper for performance)
 CREATE POLICY "Users can view own profile"
   ON profiles FOR SELECT
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 CREATE POLICY "Users can update own profile"
   ON profiles FOR UPDATE
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
--- Dreams policies
+-- Dreams policies (optimized with select wrapper for performance)
 CREATE POLICY "Users can view own dreams"
   ON dreams FOR SELECT
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 CREATE POLICY "Users can create own dreams"
   ON dreams FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK ((select auth.uid()) = user_id);
 
 CREATE POLICY "Users can update own dreams"
   ON dreams FOR UPDATE
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 CREATE POLICY "Users can delete own dreams"
   ON dreams FOR DELETE
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 -- Function to auto-create profile on user signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
 BEGIN
   INSERT INTO public.profiles (user_id)
   VALUES (NEW.id);
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- Trigger to auto-create profile
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
@@ -86,13 +90,17 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- Function to update updated_at timestamp
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = ''
+AS $$
 BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 -- Triggers for updated_at
 CREATE TRIGGER update_profiles_updated_at
