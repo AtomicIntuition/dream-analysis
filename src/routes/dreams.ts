@@ -13,8 +13,8 @@ const moodSchema = z.enum([
   'anxious',
   'peaceful',
   'confused',
-  'excited',
-  'scared',
+  'exciting',
+  'scary',
   'neutral',
 ]);
 
