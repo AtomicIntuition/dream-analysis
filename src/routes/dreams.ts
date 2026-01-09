@@ -13,8 +13,8 @@ const moodSchema = z.enum([
   'anxious',
   'peaceful',
   'confused',
-  'exciting',
-  'scary',
+  'excited',
+  'scared',
   'neutral',
 ]);
 
@@ -35,21 +35,47 @@ const updateDreamSchema = z.object({
   tags: z.array(z.string().max(50)).max(10).optional(),
 });
 
-// Get all dreams for user
+// Get all dreams for user with pagination
 router.get('/', authMiddleware, async (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
   try {
+    // Parse pagination params
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
+    const offset = (page - 1) * limit;
+
+    // Get total count for pagination
+    const { count: totalCount, error: countError } = await supabaseAdmin
+      .from('dreams')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', authReq.user.id);
+
+    if (countError) throw countError;
+
+    // Get paginated dreams
     const { data: dreams, error } = await supabaseAdmin
       .from('dreams')
       .select('*')
       .eq('user_id', authReq.user.id)
-      .order('date', { ascending: false });
+      .order('date', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (error) throw error;
+
+    const total = totalCount ?? 0;
+    const totalPages = Math.ceil(total / limit);
 
     res.json({
       success: true,
       data: dreams,
+      pagination: {
+        page,
+        limit,
+        totalCount: total,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
     });
   } catch (error) {
     console.error('Error fetching dreams:', error);
