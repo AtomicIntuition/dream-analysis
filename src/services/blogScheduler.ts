@@ -1,4 +1,4 @@
-import cron from 'node-cron';
+import cron, { ScheduledTask } from 'node-cron';
 import { supabaseAdmin } from './supabase';
 import {
   generateFullDreamPost,
@@ -7,7 +7,7 @@ import {
 } from './blogGenerator';
 
 // Track scheduled jobs
-const scheduledJobs: Map<string, cron.ScheduledTask> = new Map();
+const scheduledJobs: Map<string, ScheduledTask> = new Map();
 
 // Default schedule: 2 posts per day
 // Morning dream story at 10 AM UTC
