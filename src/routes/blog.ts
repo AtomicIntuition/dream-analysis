@@ -206,8 +206,10 @@ router.get('/posts/:slug', async (req: Request, res: Response) => {
       return;
     }
 
-    // Increment view count asynchronously
-    supabaseAdmin.rpc('increment_blog_view', { post_slug: slug }).catch(console.error);
+    // Increment view count asynchronously (fire and forget)
+    supabaseAdmin.rpc('increment_blog_view', { post_slug: slug }).then(({ error }) => {
+      if (error) console.error('Failed to increment view count:', error);
+    });
 
     res.json({
       success: true,
