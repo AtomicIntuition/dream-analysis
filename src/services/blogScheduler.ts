@@ -9,12 +9,12 @@ import {
 // Track scheduled jobs
 const scheduledJobs: Map<string, ScheduledTask> = new Map();
 
-// Default schedule: 2 posts per day
-// Morning dream story at 10 AM UTC
-// Evening educational/dream at 6 PM UTC
+// Default schedule: 2 posts per day (optimized for US Eastern timezone)
+// Morning post at 9 AM Eastern = 2 PM UTC (14:00)
+// Evening post at 6 PM Eastern = 11 PM UTC (23:00)
 const DEFAULT_SCHEDULES = {
-  morningDream: '0 10 * * *',      // 10:00 AM UTC daily
-  eveningPost: '0 18 * * *',        // 6:00 PM UTC daily
+  morningDream: '0 14 * * *',      // 9:00 AM Eastern / 2:00 PM UTC daily
+  eveningPost: '0 23 * * *',        // 6:00 PM Eastern / 11:00 PM UTC daily
 };
 
 // Educational categories to rotate through
@@ -140,8 +140,8 @@ export function startBlogScheduler(): void {
   scheduledJobs.set('eveningPost', eveningJob);
 
   console.log('[BlogScheduler] Scheduler started with schedules:');
-  console.log('  - Morning dream post: 10:00 AM UTC daily');
-  console.log('  - Evening post (alternating): 6:00 PM UTC daily');
+  console.log('  - Morning dream post: 9:00 AM Eastern / 2:00 PM UTC daily');
+  console.log('  - Evening post (alternating): 6:00 PM Eastern / 11:00 PM UTC daily');
 }
 
 // Stop the scheduler
@@ -162,10 +162,10 @@ export function getSchedulerStatus(): {
   const jobs: Array<{ name: string; schedule: string }> = [];
 
   if (scheduledJobs.has('morningDream')) {
-    jobs.push({ name: 'Morning Dream Post', schedule: '10:00 AM UTC daily' });
+    jobs.push({ name: 'Morning Dream Post', schedule: '9:00 AM Eastern / 2:00 PM UTC daily' });
   }
   if (scheduledJobs.has('eveningPost')) {
-    jobs.push({ name: 'Evening Post (alternating)', schedule: '6:00 PM UTC daily' });
+    jobs.push({ name: 'Evening Post (alternating)', schedule: '6:00 PM Eastern / 11:00 PM UTC daily' });
   }
 
   return {

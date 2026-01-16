@@ -438,7 +438,7 @@ router.get('/admin/scheduler', async (req: Request, res: Response) => {
     data: {
       scheduler: status,
       timezone: 'UTC',
-      description: 'Blog posts are automatically generated twice daily: morning dream story at 10 AM UTC, evening alternating post at 6 PM UTC.',
+      description: 'Blog posts are automatically generated twice daily: morning dream story at 9 AM Eastern (2 PM UTC), evening alternating post at 6 PM Eastern (11 PM UTC).',
     },
   });
 });
