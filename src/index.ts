@@ -10,6 +10,7 @@ import authRoutes from './routes/auth';
 import dreamsRoutes from './routes/dreams';
 import analysisRoutes from './routes/analysis';
 import billingRoutes from './routes/billing';
+import blogRoutes from './routes/blog';
 
 const app = express();
 
@@ -65,6 +66,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/dreams', dreamsRoutes);
 app.use('/api/analysis', analysisRoutes);
 app.use('/api/billing', billingRoutes);
+app.use('/api/blog', blogRoutes);
 
 // 404 handler
 app.use((req, res) => {

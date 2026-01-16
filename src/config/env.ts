@@ -42,6 +42,11 @@ const envSchema = z.object({
 
   // Limits
   FREE_ANALYSES_PER_MONTH: z.string().transform(Number).default('3'),
+
+  // Blog
+  BLOG_ADMIN_KEY: isDev
+    ? z.string().default('dev-blog-admin-key')
+    : z.string().min(16),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -68,4 +73,5 @@ export const env = parsed.success ? parsed.data : {
   STRIPE_WEBHOOK_SECRET: 'whsec_placeholder',
   STRIPE_PRICE_ID_MONTHLY: 'price_placeholder',
   FREE_ANALYSES_PER_MONTH: 3,
+  BLOG_ADMIN_KEY: 'dev-blog-admin-key',
 };
