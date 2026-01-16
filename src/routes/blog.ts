@@ -7,7 +7,7 @@ import {
   generateEducationalPost,
   getRandomEducationalTopic,
 } from '../services/blogGenerator';
-// Types imported from '../types/blog' if needed for type annotations
+import { getSchedulerStatus } from '../services/blogScheduler';
 
 const router = Router();
 
@@ -417,6 +417,30 @@ router.get('/search', async (req: Request, res: Response) => {
       error: 'Failed to search posts',
     });
   }
+});
+
+// GET /api/blog/admin/scheduler - Get scheduler status
+router.get('/admin/scheduler', async (req: Request, res: Response) => {
+  // Check for admin API key
+  const apiKey = req.headers['x-admin-key'];
+  if (apiKey !== env.BLOG_ADMIN_KEY) {
+    res.status(401).json({
+      success: false,
+      error: 'Unauthorized',
+    });
+    return;
+  }
+
+  const status = getSchedulerStatus();
+
+  res.json({
+    success: true,
+    data: {
+      scheduler: status,
+      timezone: 'UTC',
+      description: 'Blog posts are automatically generated twice daily: morning dream story at 10 AM UTC, evening alternating post at 6 PM UTC.',
+    },
+  });
 });
 
 export default router;

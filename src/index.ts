@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { env } from './config/env';
 import { startKeepWarm } from './utils/keepWarm';
+import { startBlogScheduler, getSchedulerStatus } from './services/blogScheduler';
 
 // Routes
 import authRoutes from './routes/auth';
@@ -97,6 +98,9 @@ app.listen(PORT, () => {
 
   // Start keep-warm for Render free tier
   startKeepWarm(env.SERVICE_URL);
+
+  // Start blog post scheduler
+  startBlogScheduler();
 });
 
 export default app;
