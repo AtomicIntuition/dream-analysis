@@ -47,6 +47,12 @@ const envSchema = z.object({
   BLOG_ADMIN_KEY: isDev
     ? z.string().default('dev-blog-admin-key')
     : z.string().min(16),
+
+  // Twitter (optional - for auto-posting blog updates)
+  TWITTER_API_KEY: z.string().optional(),
+  TWITTER_API_SECRET: z.string().optional(),
+  TWITTER_ACCESS_TOKEN: z.string().optional(),
+  TWITTER_ACCESS_TOKEN_SECRET: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -74,4 +80,8 @@ export const env = parsed.success ? parsed.data : {
   STRIPE_PRICE_ID_MONTHLY: 'price_placeholder',
   FREE_ANALYSES_PER_MONTH: 3,
   BLOG_ADMIN_KEY: 'dev-blog-admin-key',
+  TWITTER_API_KEY: undefined,
+  TWITTER_API_SECRET: undefined,
+  TWITTER_ACCESS_TOKEN: undefined,
+  TWITTER_ACCESS_TOKEN_SECRET: undefined,
 };

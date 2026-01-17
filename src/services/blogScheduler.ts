@@ -5,6 +5,7 @@ import {
   generateEducationalPost,
   getRandomEducationalTopic,
 } from './blogGenerator';
+import { tweetNewBlogPost, isTwitterEnabled } from './twitter';
 
 // Track scheduled jobs
 const scheduledJobs: Map<string, ScheduledTask> = new Map();
@@ -63,6 +64,21 @@ async function generateDreamPost(): Promise<void> {
     if (error) throw error;
 
     console.log(`[BlogScheduler] Dream post generated: "${savedPost.title}"`);
+
+    // Tweet about the new blog post
+    if (isTwitterEnabled()) {
+      const tweetResult = await tweetNewBlogPost({
+        title: savedPost.title,
+        slug: savedPost.slug,
+        excerpt: savedPost.excerpt,
+        category: 'dream-stories',
+      });
+      if (tweetResult.success) {
+        console.log(`[BlogScheduler] Tweet posted for dream post: ${tweetResult.tweetId}`);
+      } else {
+        console.warn(`[BlogScheduler] Failed to tweet: ${tweetResult.error}`);
+      }
+    }
   } catch (error) {
     console.error('[BlogScheduler] Failed to generate dream post:', error);
   }
@@ -100,6 +116,21 @@ async function generateEducationalContent(): Promise<void> {
     if (error) throw error;
 
     console.log(`[BlogScheduler] Educational post generated: "${savedPost.title}"`);
+
+    // Tweet about the new blog post
+    if (isTwitterEnabled()) {
+      const tweetResult = await tweetNewBlogPost({
+        title: savedPost.title,
+        slug: savedPost.slug,
+        excerpt: savedPost.excerpt,
+        category,
+      });
+      if (tweetResult.success) {
+        console.log(`[BlogScheduler] Tweet posted for educational post: ${tweetResult.tweetId}`);
+      } else {
+        console.warn(`[BlogScheduler] Failed to tweet: ${tweetResult.error}`);
+      }
+    }
   } catch (error) {
     console.error('[BlogScheduler] Failed to generate educational post:', error);
   }
