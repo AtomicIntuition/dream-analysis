@@ -8,6 +8,7 @@ import {
   getRandomEducationalTopic,
 } from '../services/blogGenerator';
 import { getSchedulerStatus } from '../services/blogScheduler';
+import { tweetNewBlogPost, verifyTwitterCredentials, isTwitterEnabled } from '../services/twitter';
 
 const router = Router();
 
@@ -441,6 +442,107 @@ router.get('/admin/scheduler', async (req: Request, res: Response) => {
       description: 'Blog posts are automatically generated twice daily: morning dream story at 9 AM Eastern (2 PM UTC), evening alternating post at 6 PM Eastern (11 PM UTC).',
     },
   });
+});
+
+// GET /api/blog/admin/twitter/status - Check Twitter configuration and credentials
+router.get('/admin/twitter/status', async (req: Request, res: Response) => {
+  // Check for admin API key
+  const apiKey = req.headers['x-admin-key'];
+  if (apiKey !== env.BLOG_ADMIN_KEY) {
+    res.status(401).json({
+      success: false,
+      error: 'Unauthorized',
+    });
+    return;
+  }
+
+  const enabled = isTwitterEnabled();
+
+  if (!enabled) {
+    res.json({
+      success: true,
+      data: {
+        enabled: false,
+        message: 'Twitter credentials not configured',
+      },
+    });
+    return;
+  }
+
+  // Verify credentials with Twitter API
+  const verification = await verifyTwitterCredentials();
+
+  res.json({
+    success: true,
+    data: {
+      enabled: true,
+      verified: verification.success,
+      username: verification.username,
+      error: verification.error,
+    },
+  });
+});
+
+// POST /api/blog/admin/twitter/test - Test tweet for an existing blog post
+router.post('/admin/twitter/test', async (req: Request, res: Response) => {
+  // Check for admin API key
+  const apiKey = req.headers['x-admin-key'];
+  if (apiKey !== env.BLOG_ADMIN_KEY) {
+    res.status(401).json({
+      success: false,
+      error: 'Unauthorized',
+    });
+    return;
+  }
+
+  const { slug } = req.body;
+
+  if (!slug) {
+    res.status(400).json({
+      success: false,
+      error: 'slug is required in request body',
+    });
+    return;
+  }
+
+  // Fetch the blog post
+  const { data: post, error: fetchError } = await supabaseAdmin
+    .from('blog_posts')
+    .select('title, slug, excerpt, category')
+    .eq('slug', slug)
+    .single();
+
+  if (fetchError || !post) {
+    res.status(404).json({
+      success: false,
+      error: 'Blog post not found',
+    });
+    return;
+  }
+
+  // Post the tweet
+  const result = await tweetNewBlogPost({
+    title: post.title,
+    slug: post.slug,
+    excerpt: post.excerpt,
+    category: post.category,
+  });
+
+  if (result.success) {
+    res.json({
+      success: true,
+      data: {
+        tweetId: result.tweetId,
+        tweetUrl: `https://twitter.com/CodeAI4Crypto/status/${result.tweetId}`,
+        postTitle: post.title,
+      },
+    });
+  } else {
+    res.status(500).json({
+      success: false,
+      error: result.error,
+    });
+  }
 });
 
 export default router;
