@@ -41,104 +41,136 @@ interface BlogPostInfo {
   category: 'dream-stories' | 'dream-science' | 'sleep-tips' | 'symbolism';
 }
 
-// Tweet templates for variety
-const TWEET_HOOKS = {
-  question: [
-    "Ever wonder why you dream about ",
-    "What does it mean when ",
-    "Why do our minds create ",
-  ],
-  statement: [
-    "Your subconscious is trying to tell you something.",
-    "This dream pattern reveals more than you think.",
-    "The psychology behind this dream is fascinating.",
-  ],
-  insight: [
-    "A dream about {topic} isn't what it seems.",
-    "That recurring {topic} dream? There's a reason.",
-    "What {topic} actually symbolizes in dreams:",
-  ],
-};
-
 /**
- * Generate a short, punchy tweet for a new blog post using Claude
+ * Generate a branded, eye-catching tweet for a new blog post using Claude
  */
 async function generateTweetContent(post: BlogPostInfo): Promise<string> {
   const postUrl = `${BLOG_BASE_URL}/post/${post.slug}`;
 
-  // Calculate max content length (280 total - URL - space - buffer)
+  // Calculate max content length (280 total - URL - space - buffer for line breaks)
   // t.co URLs are 23 characters
   const urlLength = 23;
-  const maxContentLength = 280 - urlLength - 2; // 2 for space and buffer
+  const maxContentLength = 280 - urlLength - 4; // buffer for spacing
 
-  const categoryContext = {
-    'dream-stories': 'AI-analyzed dream story with psychological insights',
-    'dream-science': 'educational content about dream science',
-    'sleep-tips': 'practical sleep and dream recall tips',
-    'symbolism': 'dream symbol meanings and interpretations',
+  // Category-specific branding
+  const categoryBranding = {
+    'dream-stories': {
+      emoji: '🌙',
+      secondaryEmoji: '💭',
+      tone: 'mysterious and intriguing - pull them into the dream narrative',
+      hook: 'story-driven curiosity',
+    },
+    'dream-science': {
+      emoji: '🧠',
+      secondaryEmoji: '💡',
+      tone: 'mind-blowing facts - make them feel smarter for clicking',
+      hook: 'surprising scientific insight',
+    },
+    'sleep-tips': {
+      emoji: '✨',
+      secondaryEmoji: '💤',
+      tone: 'transformative promise - they will sleep/dream better tonight',
+      hook: 'actionable benefit they can use immediately',
+    },
+    'symbolism': {
+      emoji: '🔮',
+      secondaryEmoji: '🌊',
+      tone: 'revelatory secrets - hidden meanings most people miss',
+      hook: 'decode something they have experienced',
+    },
   };
 
-  const tweetStyle = {
-    'dream-stories': 'mysterious and intriguing - make people curious about what happens in this dream',
-    'dream-science': 'authoritative but accessible - share a surprising fact that hooks them',
-    'sleep-tips': 'helpful and actionable - promise a specific benefit',
-    'symbolism': 'revelatory - hint at a hidden meaning most people miss',
-  };
+  const branding = categoryBranding[post.category];
 
   try {
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 150,
+      max_tokens: 200,
       messages: [
         {
           role: 'user',
-          content: `Write a tweet to promote this blog post. MAX ${maxContentLength} characters (URL added separately).
+          content: `Create a branded, scroll-stopping tweet for this blog post. MAX ${maxContentLength} characters (URL added separately).
 
+BLOG POST:
 Title: "${post.title}"
 Excerpt: "${post.excerpt}"
-Type: ${categoryContext[post.category]}
 
-STYLE GUIDE for this tweet type - be ${tweetStyle[post.category]}
+BRAND VOICE: Dream psychology expert sharing fascinating insights. Smart, warm, slightly mysterious.
 
-FORMULA OPTIONS (pick the best one for this post):
-1. HOOK + REVEAL: Start with something surprising, then hint at the answer in the post
-2. QUESTION + INTRIGUE: Ask a question the reader will want answered
-3. BOLD CLAIM: Make a statement that challenges assumptions
-4. PERSONAL: "That dream where..." - speak to a common experience
+REQUIRED FORMAT (use line breaks for visual impact):
+${branding.emoji} [Hook line - curiosity or bold claim]
+
+[1-2 sentence expansion that creates FOMO]
+
+[Optional: ${branding.secondaryEmoji} or arrow ↓ pointing to link]
+
+TONE: ${branding.tone}
+HOOK TYPE: ${branding.hook}
+
+TWEET FORMULAS THAT WORK (pick best fit):
+
+1. PATTERN INTERRUPT:
+${branding.emoji} [Surprising statement that challenges assumptions]
+
+[Why this matters to YOU]
+
+2. RELATABLE + REVEAL:
+${branding.emoji} That [common experience]?
+
+[There's a reason / Here's what it means] ${branding.secondaryEmoji}
+
+3. CURIOSITY GAP:
+${branding.emoji} [Intriguing incomplete thought]...
+
+[Tease the answer without giving it away]
+
+4. BOLD CLAIM + PROOF TEASE:
+${branding.emoji} [Confident assertion]
+
+[Hint at the evidence/story in the post]
 
 CRITICAL RULES:
-- Under ${maxContentLength} characters, no exceptions
-- NO hashtags ever
-- One emoji MAX (only if it adds punch, not decoration)
-- Start strong - first 5 words must grab attention
-- End with a hook or open loop that demands a click
-- Sound like a smart friend sharing something interesting, not a brand
-- NO corporate speak: avoid "discover", "learn", "check out", "new post"
-- The reader should feel like they're missing out if they don't click
+- MUST use ${branding.emoji} at the start for brand recognition
+- Use line breaks to create visual breathing room
+- Second emoji (${branding.secondaryEmoji}) optional but encouraged
+- NO hashtags (looks spammy)
+- NO "check out" / "new post" / "click here" corporate speak
+- Create an open loop - they NEED to click to close it
+- Write like sharing with a friend, not marketing at them
+- Under ${maxContentLength} chars STRICT
 
-GOOD EXAMPLES:
-- "That falling dream isn't about falling."
-- "Your brain processes 6 years of memories while you sleep. Here's what it does with them 🧠"
-- "The dream you keep having? Your subconscious picked that for a reason."
-
-Output ONLY the tweet text. No quotes, no explanation.`
+Output ONLY the tweet text with line breaks. No quotes, no explanation.`
         }
       ],
     });
 
-    const tweetContent = (message.content[0] as { type: 'text'; text: string }).text.trim();
+    let tweetContent = (message.content[0] as { type: 'text'; text: string }).text.trim();
+
+    // Clean up any accidental quotes
+    tweetContent = tweetContent.replace(/^["']|["']$/g, '');
 
     // Ensure we don't exceed the limit
-    const truncated = tweetContent.length > maxContentLength
-      ? tweetContent.substring(0, maxContentLength - 3) + '...'
-      : tweetContent;
+    if (tweetContent.length > maxContentLength) {
+      // Try to truncate at a natural break point
+      const lines = tweetContent.split('\n');
+      let truncated = '';
+      for (const line of lines) {
+        if ((truncated + line + '\n').length <= maxContentLength - 3) {
+          truncated += line + '\n';
+        } else {
+          break;
+        }
+      }
+      tweetContent = truncated.trim() || tweetContent.substring(0, maxContentLength - 3) + '...';
+    }
 
-    return `${truncated} ${postUrl}`;
+    return `${tweetContent}\n\n${postUrl}`;
   } catch (error) {
     console.error('[Twitter] Failed to generate tweet content:', error);
-    // Fallback to a simple tweet
-    const fallback = `New: ${post.title.substring(0, 200)}`;
-    return `${fallback} ${postUrl}`;
+    // Branded fallback
+    const branding = categoryBranding[post.category];
+    const fallback = `${branding.emoji} ${post.title.substring(0, 200)}`;
+    return `${fallback}\n\n${postUrl}`;
   }
 }
 
