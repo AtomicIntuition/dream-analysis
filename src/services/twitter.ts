@@ -42,135 +42,159 @@ interface BlogPostInfo {
 }
 
 /**
- * Generate a branded, eye-catching tweet for a new blog post using Claude
+ * Generate optimized tweets for verified account - designed for organic growth
+ *
+ * Strategy:
+ * - First 280 chars are "above the fold" - must hook immediately
+ * - Value-first approach builds trust
+ * - Consistent branding creates recognition
+ * - Soft CTAs convert better than hard sells
+ * - Each post subtly promotes the Dream Analysis app
  */
 async function generateTweetContent(post: BlogPostInfo): Promise<string> {
   const postUrl = `${BLOG_BASE_URL}/post/${post.slug}`;
+  const appUrl = 'https://dreamanalysis.netlify.app';
 
-  // Calculate max content length (280 total - URL - space - buffer for line breaks)
-  // t.co URLs are 23 characters
-  const urlLength = 23;
-  const maxContentLength = 280 - urlLength - 4; // buffer for spacing
-
-  // Category-specific branding
-  const categoryBranding = {
+  // Category-specific strategy
+  const categoryStrategy = {
     'dream-stories': {
-      emoji: '🌙',
-      secondaryEmoji: '💭',
-      tone: 'mysterious and intriguing - pull them into the dream narrative',
-      hook: 'story-driven curiosity',
+      icon: '🌙',
+      accent: '💭',
+      hook: 'Pull them into the mystery of this specific dream',
+      value: 'Tease the psychological revelation',
+      cta: 'The interpretation will shift how they see their own dreams',
     },
     'dream-science': {
-      emoji: '🧠',
-      secondaryEmoji: '💡',
-      tone: 'mind-blowing facts - make them feel smarter for clicking',
-      hook: 'surprising scientific insight',
+      icon: '🧠',
+      accent: '⚡',
+      hook: 'Lead with a mind-blowing fact most people don\'t know',
+      value: 'Make them feel smarter just reading the tweet',
+      cta: 'Promise deeper understanding',
     },
     'sleep-tips': {
-      emoji: '✨',
-      secondaryEmoji: '💤',
-      tone: 'transformative promise - they will sleep/dream better tonight',
-      hook: 'actionable benefit they can use immediately',
+      icon: '✨',
+      accent: '🛏️',
+      hook: 'Promise a specific transformation they can do TONIGHT',
+      value: 'Give one actionable tip in the tweet itself',
+      cta: 'Full method in the post',
     },
     'symbolism': {
-      emoji: '🔮',
-      secondaryEmoji: '🌊',
-      tone: 'revelatory secrets - hidden meanings most people miss',
-      hook: 'decode something they have experienced',
+      icon: '🔮',
+      accent: '👁️',
+      hook: 'Name a common dream experience they\'ve probably had',
+      value: 'Hint that it means something they never considered',
+      cta: 'Decode their own dreams',
     },
   };
 
-  const branding = categoryBranding[post.category];
+  const strategy = categoryStrategy[post.category];
 
   try {
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 200,
+      max_tokens: 500,
       messages: [
         {
           role: 'user',
-          content: `Create a branded, scroll-stopping tweet for this blog post. MAX ${maxContentLength} characters (URL added separately).
+          content: `You're writing a tweet for a VERIFIED Twitter account focused on dream psychology. Goal: organic growth, build trust, drive clicks, convert to app subscribers.
 
-BLOG POST:
+BLOG POST TO PROMOTE:
 Title: "${post.title}"
 Excerpt: "${post.excerpt}"
+Category: ${post.category}
 
-BRAND VOICE: Dream psychology expert sharing fascinating insights. Smart, warm, slightly mysterious.
+BRAND IDENTITY:
+- Account: @CodeAI4Crypto
+- Personality: Smart, curious, slightly mysterious dream expert
+- Tone: Like a fascinating friend who knows secrets about the mind
+- Mission: Help people understand their dreams + promote Dream Analysis app
 
-REQUIRED FORMAT (use line breaks for visual impact):
-${branding.emoji} [Hook line - curiosity or bold claim]
+TWEET STRUCTURE (follow this format):
 
-[1-2 sentence expansion that creates FOMO]
+${strategy.icon} [HOOK - 1 line that stops the scroll]
 
-[Optional: ${branding.secondaryEmoji} or arrow ↓ pointing to link]
+[VALUE BLOCK - 2-4 lines of genuine insight or intrigue]
+• Use line breaks for readability
+• Give them something useful IN the tweet
+• Build curiosity for what's in the full post
 
-TONE: ${branding.tone}
-HOOK TYPE: ${branding.hook}
+${strategy.accent} [SOFT CTA - not "click here" but a reason to want more]
 
-TWEET FORMULAS THAT WORK (pick best fit):
+---
+[URL will be added automatically]
 
-1. PATTERN INTERRUPT:
-${branding.emoji} [Surprising statement that challenges assumptions]
+CATEGORY STRATEGY FOR THIS POST:
+- Hook approach: ${strategy.hook}
+- Value approach: ${strategy.value}
+- CTA approach: ${strategy.cta}
 
-[Why this matters to YOU]
+PROVEN FORMULAS (pick best fit):
 
-2. RELATABLE + REVEAL:
-${branding.emoji} That [common experience]?
+1. THE REVELATION:
+${strategy.icon} Most people don't know this about [topic]...
 
-[There's a reason / Here's what it means] ${branding.secondaryEmoji}
+[Share a genuine insight that surprises]
+[Add a second layer that deepens it]
 
-3. CURIOSITY GAP:
-${branding.emoji} [Intriguing incomplete thought]...
+${strategy.accent} The full psychology behind it ↓
 
-[Tease the answer without giving it away]
+2. THE RELATABLE HOOK:
+${strategy.icon} That dream where [common experience]?
 
-4. BOLD CLAIM + PROOF TEASE:
-${branding.emoji} [Confident assertion]
+Your brain chose that for a reason.
+[Hint at what it might mean]
 
-[Hint at the evidence/story in the post]
+${strategy.accent} Here's what it's trying to tell you ↓
+
+3. THE PATTERN INTERRUPT:
+${strategy.icon} [Counterintuitive statement]
+
+[Explain why the opposite of what they think is true]
+[Make it personal to THEM]
+
+${strategy.accent} The science/story behind it ↓
+
+4. THE VALUE-FIRST:
+${strategy.icon} [Actionable insight they can use immediately]
+
+Why this works:
+• [Reason 1]
+• [Reason 2]
+
+${strategy.accent} More techniques in the full breakdown ↓
 
 CRITICAL RULES:
-- MUST use ${branding.emoji} at the start for brand recognition
-- Use line breaks to create visual breathing room
-- Second emoji (${branding.secondaryEmoji}) optional but encouraged
-- NO hashtags (looks spammy)
-- NO "check out" / "new post" / "click here" corporate speak
-- Create an open loop - they NEED to click to close it
-- Write like sharing with a friend, not marketing at them
-- Under ${maxContentLength} chars STRICT
+✓ First line MUST hook - it's all they see before "read more"
+✓ Use ${strategy.icon} at start ALWAYS (brand recognition)
+✓ Line breaks = visual breathing room = more readable
+✓ Give real value, not just teasers
+✓ Sound like a smart friend, not a marketer
+✓ Create an open loop they need to close
+✗ NO hashtags
+✗ NO "check out" / "click here" / "new post"
+✗ NO generic statements - be SPECIFIC
+✗ NO emojis as decoration - only for structure/meaning
 
-Output ONLY the tweet text with line breaks. No quotes, no explanation.`
+Keep total length under 600 characters (excluding URL).
+
+Output ONLY the tweet text. No quotes, no meta-commentary.`
         }
       ],
     });
 
     let tweetContent = (message.content[0] as { type: 'text'; text: string }).text.trim();
 
-    // Clean up any accidental quotes
+    // Clean up any accidental quotes or meta text
     tweetContent = tweetContent.replace(/^["']|["']$/g, '');
+    tweetContent = tweetContent.replace(/^(Here'?s? (the|your|a) tweet:?\s*)/i, '');
 
-    // Ensure we don't exceed the limit
-    if (tweetContent.length > maxContentLength) {
-      // Try to truncate at a natural break point
-      const lines = tweetContent.split('\n');
-      let truncated = '';
-      for (const line of lines) {
-        if ((truncated + line + '\n').length <= maxContentLength - 3) {
-          truncated += line + '\n';
-        } else {
-          break;
-        }
-      }
-      tweetContent = truncated.trim() || tweetContent.substring(0, maxContentLength - 3) + '...';
-    }
-
+    // Add URL with clean spacing
     return `${tweetContent}\n\n${postUrl}`;
   } catch (error) {
     console.error('[Twitter] Failed to generate tweet content:', error);
-    // Branded fallback
-    const branding = categoryBranding[post.category];
-    const fallback = `${branding.emoji} ${post.title.substring(0, 200)}`;
-    return `${fallback}\n\n${postUrl}`;
+    // Branded fallback with value
+    const strategy = categoryStrategy[post.category];
+    return `${strategy.icon} ${post.title}\n\n${post.excerpt}\n\n${postUrl}`;
   }
 }
 
