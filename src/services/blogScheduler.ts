@@ -87,7 +87,7 @@ async function generateDreamPost(): Promise<void> {
 // Generate and save an educational post
 async function generateEducationalContent(): Promise<void> {
   const category = getNextEducationalCategory();
-  const topic = getRandomEducationalTopic(category);
+  const topic = await getRandomEducationalTopic(category); // Now async to check for duplicates
 
   console.log(`[BlogScheduler] Starting educational post generation: ${topic}`);
 

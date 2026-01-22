@@ -330,8 +330,8 @@ router.post('/admin/generate/educational', async (req: Request, res: Response) =
       return;
     }
 
-    // Use provided topic or get random one
-    const postTopic = topic || getRandomEducationalTopic(category);
+    // Use provided topic or get random one (now async to avoid duplicates)
+    const postTopic = topic || await getRandomEducationalTopic(category);
 
     console.log(`Generating educational post: ${postTopic}`);
 
