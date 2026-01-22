@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { verifyToken, getOrCreateProfile } from '../services/supabase';
+import { hasFreeAccess } from '../config/freeAccess';
 import type { AuthenticatedRequest } from '../types';
 
 export const authMiddleware: RequestHandler = async (
@@ -33,12 +34,18 @@ export const authMiddleware: RequestHandler = async (
     // Get user profile with subscription info
     const profile = await getOrCreateProfile(user.id);
 
+    const userEmail = user.email || '';
+
     authReq.user = {
       id: user.id,
-      email: user.email || '',
+      email: userEmail,
       created_at: user.created_at,
     };
-    authReq.subscriptionStatus = profile.subscription_status;
+
+    // Grant Pro access to whitelisted emails (family/friends)
+    authReq.subscriptionStatus = hasFreeAccess(userEmail)
+      ? 'pro'
+      : profile.subscription_status;
     authReq.analysesUsedThisMonth = profile.analyses_used_this_month;
 
     next();
@@ -67,12 +74,16 @@ export const optionalAuthMiddleware: RequestHandler = async (
 
       if (user) {
         const profile = await getOrCreateProfile(user.id);
+        const userEmail = user.email || '';
         authReq.user = {
           id: user.id,
-          email: user.email || '',
+          email: userEmail,
           created_at: user.created_at,
         };
-        authReq.subscriptionStatus = profile.subscription_status;
+        // Grant Pro access to whitelisted emails (family/friends)
+        authReq.subscriptionStatus = hasFreeAccess(userEmail)
+          ? 'pro'
+          : profile.subscription_status;
         authReq.analysesUsedThisMonth = profile.analyses_used_this_month;
       }
     }
